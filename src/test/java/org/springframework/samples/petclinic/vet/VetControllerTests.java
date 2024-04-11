@@ -17,6 +17,7 @@
 package org.springframework.samples.petclinic.vet;
 
 import org.assertj.core.util.Lists;
+import org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -26,11 +27,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.samples.petclinic.owner.Pet;
+import org.springframework.samples.petclinic.owner.PetType;
+import org.springframework.samples.petclinic.owner.Visit;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Collection;
+import java.util.Date;
+
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -80,6 +88,16 @@ class VetControllerTests {
 	}
 
 	@Test
+	void testShowVetHtml() throws Exception {
+
+		mockMvc.perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
+			.andExpect(status().isOk())
+			.andExpect(model().attributeExists("listVets"))
+			.andExpect(view().name("vets/vetList"));
+
+	}
+
+	@Test
 	void testShowVetListHtml() throws Exception {
 
 		mockMvc.perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
@@ -96,5 +114,32 @@ class VetControllerTests {
 		actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.vetList[0].id").value(1));
 	}
+
+	@Test
+	void testFilterVetListBySpeciality() {
+		// la spécialité à rechercher
+		String specialityname = "radiology";
+
+
+		// Récupère tous les vets
+		Collection<Vet> theVets = this.vets.findAll();
+
+		// Filtre et vérifie que l'on a bien la bonne vet'
+		boolean hasSpeciality = theVets.stream().anyMatch(vet -> vet.getSpecialties().stream().anyMatch(specialty -> specialty.getName().equals(specialityname)));
+		assertTrue(hasSpeciality);
+	}
+//
+//	@Test
+//	void testAddAnimal() {
+//		Pet pet = new Pet();
+//		pet.setId(1);
+//		pet.setName("Cascada");
+//		PetType type = new PetType();
+//		type.setName("cat");
+//		pet.setType(type);
+//		Visit visit = new Visit();
+//		Date today = new Date();
+//		visit.setDate(today);
+//	}
 
 }
